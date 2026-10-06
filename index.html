@@ -13,68 +13,107 @@
   <div id="login-screen" class="fixed inset-0 bg-slate-950 flex items-center justify-center p-4 z-50">
     <div class="bg-slate-800 p-8 rounded-xl shadow-2xl border border-slate-700 w-full max-w-md">
       <div class="text-center mb-6">
-        <i class="fa-solid fa-wrench text-sky-400 text-4xl mb-2"></i>
+        <div class="w-16 h-16 bg-sky-500/10 border border-sky-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+          <i class="fa-solid fa-wrench text-sky-400 text-2xl"></i>
+        </div>
         <h2 class="text-2xl font-bold text-white">IT Repair Portal</h2>
-        <p class="text-slate-400 text-sm">Please sign in to access ticket management</p>
+        <p class="text-slate-400 text-sm mt-1">Please sign in to access ticket management</p>
       </div>
       <div id="login-error" class="hidden bg-rose-500/20 border border-rose-500/50 text-rose-300 text-sm p-3 rounded-lg mb-4"></div>
       <form id="login-form" class="space-y-4">
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Email</label>
-          <input type="email" id="auth-email" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Email Address</label>
+          <input type="email" id="auth-email" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition">
         </div>
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Password</label>
-          <input type="password" id="auth-password" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Password</label>
+          <input type="password" id="auth-password" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition">
         </div>
-        <button type="submit" id="login-btn" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-medium py-2 rounded-lg transition">Sign In</button>
+        <button type="submit" id="login-btn" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-medium py-2.5 rounded-lg transition duration-200">Sign In</button>
       </form>
     </div>
   </div>
 
-  <!-- APP CONTENT -->
+  <!-- MAIN APP CONTENT -->
   <div id="app-content" class="hidden">
-    <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center">
+    <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex flex-wrap justify-between items-center gap-4">
       <div class="flex items-center gap-3">
         <i class="fa-solid fa-wrench text-sky-400 text-2xl"></i>
-        <h1 class="text-xl font-bold">IT Repair Ticket Manager</h1>
+        <h1 class="text-xl font-bold text-white">IT Repair Ticket Manager</h1>
       </div>
-      <div class="flex items-center gap-4">
-        <button onclick="copyCode()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 border border-slate-600 transition">
+      <div class="flex items-center gap-3">
+        <button onclick="copyCode()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3.5 py-2 rounded-lg text-sm flex items-center gap-2 border border-slate-600 transition">
           <i class="fa-solid fa-copy"></i>
           <span id="copy-text">Copy Code</span>
         </button>
-        <button onclick="logout()" class="bg-rose-600/80 hover:bg-rose-600 text-white px-3 py-1.5 rounded-lg text-sm transition">Sign Out</button>
+        <button onclick="logout()" class="bg-rose-600/80 hover:bg-rose-600 text-white px-3.5 py-2 rounded-lg text-sm font-medium transition">
+          <i class="fa-solid fa-right-from-bracket mr-1"></i> Sign Out
+        </button>
       </div>
     </header>
 
     <main class="max-w-6xl mx-auto p-6">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-lg font-semibold text-slate-300">Active Tickets</h2>
-        <button onclick="openModal()" class="bg-sky-600 hover:bg-sky-500 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2">
+      <!-- CONTROL BAR -->
+      <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6">
+        <div class="flex flex-wrap items-center gap-3 flex-1">
+          <div class="relative flex-1 min-w-[200px]">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input type="text" id="search-input" oninput="renderTickets()" placeholder="Search tickets..." class="w-full bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
+          </div>
+          <select id="filter-status" onchange="renderTickets()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-sky-500">
+            <option value="all">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+        <button onclick="openModal()" class="bg-sky-600 hover:bg-sky-500 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition">
           <i class="fa-solid fa-plus"></i> New Ticket
         </button>
       </div>
+
+      <!-- TICKETS GRID -->
       <div id="tickets-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     </main>
   </div>
 
-  <!-- MODAL -->
-  <div id="ticket-modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-40">
-    <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 w-full max-w-md">
-      <h3 class="text-lg font-bold mb-4">Create New Ticket</h3>
+  <!-- NEW TICKET MODAL -->
+  <div id="ticket-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-40">
+    <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 w-full max-w-md shadow-2xl">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-white">Create New Ticket</h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
       <form id="ticket-form" class="space-y-4">
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Device Name / Model</label>
-          <input type="text" id="device-name" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+          <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Device Name / Model</label>
+          <input type="text" id="device-name" required placeholder="e.g. Dell XPS 15" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-500">
         </div>
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Issue Description</label>
-          <textarea id="issue-desc" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white h-24"></textarea>
+          <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Issue Description</label>
+          <textarea id="issue-desc" required placeholder="Describe the fault or required repair..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white h-24 focus:outline-none focus:border-sky-500"></textarea>
         </div>
-        <div class="flex justify-end gap-3 pt-2">
-          <button type="button" onclick="closeModal()" class="px-4 py-2 text-slate-400 hover:text-white">Cancel</button>
-          <button type="submit" class="bg-sky-600 hover:bg-sky-500 text-white px-4 py-2 rounded-lg">Save Ticket</button>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Priority Level</label>
+            <select id="ticket-priority" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+              <option value="Low">Low</option>
+              <option value="Medium" selected>Medium</option>
+              <option value="High">High</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Initial Status</label>
+            <select id="ticket-status" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+              <option value="Pending" selected>Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 pt-3">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 text-sm text-slate-400 hover:text-white">Cancel</button>
+          <button type="submit" class="bg-sky-600 hover:bg-sky-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition">Save Ticket</button>
         </div>
       </form>
     </div>
@@ -84,9 +123,8 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // YOUR FIREBASE CONFIGURATION
     const firebaseConfig = {
       apiKey: "AIzaSyBfycxm5fQhK5LlAW0zK8aHcqtRPpThRZY",
       authDomain: "ticket-c83a4.firebaseapp.com",
@@ -102,7 +140,9 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Auth State Handler
+    let allTickets = [];
+
+    // Authentication Listener
     onAuthStateChanged(auth, (user) => {
       if (user) {
         document.getElementById("login-screen").classList.add("hidden");
@@ -114,7 +154,7 @@
       }
     });
 
-    // Login Handler
+    // Login Action
     document.getElementById("login-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = document.getElementById("auth-email").value;
@@ -129,30 +169,77 @@
       }
     });
 
-    // Logout Handler
+    // Logout Action
     window.logout = () => signOut(auth);
 
-    // Tickets Realtime Listener
+    // Fetch and Listen for Tickets
     function loadTickets() {
       onSnapshot(collection(db, "tickets"), (snapshot) => {
-        const list = document.getElementById("tickets-list");
-        list.innerHTML = "";
+        allTickets = [];
         snapshot.forEach((docSnap) => {
-          const t = docSnap.data();
-          list.innerHTML += `
-            <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl flex justify-between items-start">
-              <div>
-                <h4 class="font-bold text-sky-400">${t.device}</h4>
-                <p class="text-slate-300 text-sm mt-1">${t.issue}</p>
-              </div>
-              <button onclick="deleteTicket('${docSnap.id}')" class="text-slate-500 hover:text-rose-400 transition">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </div>
-          `;
+          allTickets.push({ id: docSnap.id, ...docSnap.data() });
         });
+        renderTickets();
       });
     }
+
+    // Render Tickets to Screen
+    window.renderTickets = () => {
+      const list = document.getElementById("tickets-list");
+      const search = document.getElementById("search-input").value.toLowerCase();
+      const filter = document.getElementById("filter-status").value;
+
+      list.innerHTML = "";
+
+      const filtered = allTickets.filter(t => {
+        const matchesSearch = t.device.toLowerCase().includes(search) || t.issue.toLowerCase().includes(search);
+        const matchesStatus = filter === "all" || t.status === filter;
+        return matchesSearch && matchesStatus;
+      });
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">No tickets found.</div>`;
+        return;
+      }
+
+      filtered.forEach((t) => {
+        const priorityColors = {
+          Low: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+          Medium: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+          High: "bg-rose-500/10 text-rose-400 border-rose-500/20"
+        };
+
+        const statusColors = {
+          "Pending": "bg-slate-700 text-slate-300",
+          "In Progress": "bg-sky-500/20 text-sky-300 border border-sky-500/30",
+          "Completed": "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+        };
+
+        list.innerHTML += `
+          <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl flex flex-col justify-between gap-4 shadow-lg">
+            <div>
+              <div class="flex justify-between items-start mb-2 gap-2">
+                <h4 class="font-bold text-white text-lg">${t.device}</h4>
+                <span class="px-2 py-0.5 text-xs font-semibold rounded-full border ${priorityColors[t.priority] || priorityColors.Medium}">
+                  ${t.priority || 'Medium'}
+                </span>
+              </div>
+              <p class="text-slate-300 text-sm whitespace-pre-line mb-3">${t.issue}</p>
+            </div>
+            <div class="pt-3 border-t border-slate-700/60 flex justify-between items-center">
+              <select onchange="updateStatus('${t.id}', this.value)" class="text-xs rounded-lg px-2.5 py-1 font-medium ${statusColors[t.status] || statusColors.Pending} focus:outline-none">
+                <option value="Pending" ${t.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                <option value="In Progress" ${t.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                <option value="Completed" ${t.status === 'Completed' ? 'selected' : ''}>Completed</option>
+              </select>
+              <button onclick="deleteTicket('${t.id}')" class="text-slate-500 hover:text-rose-400 p-1 transition">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      });
+    };
 
     // Add Ticket
     document.getElementById("ticket-form").addEventListener("submit", async (e) => {
@@ -160,11 +247,18 @@
       await addDoc(collection(db, "tickets"), {
         device: document.getElementById("device-name").value,
         issue: document.getElementById("issue-desc").value,
+        priority: document.getElementById("ticket-priority").value,
+        status: document.getElementById("ticket-status").value,
         created: new Date()
       });
       closeModal();
       document.getElementById("ticket-form").reset();
     });
+
+    // Update Ticket Status
+    window.updateStatus = (id, newStatus) => {
+      updateDoc(doc(db, "tickets", id), { status: newStatus });
+    };
 
     // Delete Ticket
     window.deleteTicket = (id) => deleteDoc(doc(db, "tickets", id));
@@ -176,7 +270,7 @@
       setTimeout(() => document.getElementById("copy-text").textContent = "Copy Code", 2000);
     };
 
-    // Modal Handlers
+    // Modal Control
     window.openModal = () => document.getElementById("ticket-modal").classList.replace("hidden", "flex");
     window.closeModal = () => document.getElementById("ticket-modal").classList.replace("flex", "hidden");
   </script>
