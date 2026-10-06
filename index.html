@@ -28,15 +28,15 @@
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans antialiased">
 
   <!-- ========================================== -->
-  <!-- SUCCESS TOAST NOTIFICATION                 -->
+  <!-- POPUP SUCCESS TAB (SLIDES IN AND AWAY)    -->
   <!-- ========================================== -->
   <div id="toast-notification" class="fixed top-5 right-5 z-50 transform translate-y-[-150%] opacity-0 transition-all duration-300 ease-out flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-2xl border border-emerald-400/40 pointer-events-none">
-    <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center">
-      <i class="fa-solid fa-check text-white text-sm"></i>
+    <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+      <i class="fa-solid fa-check text-white text-base"></i>
     </div>
     <div>
       <h5 id="toast-title" class="font-bold text-sm leading-tight">Ticket Created</h5>
-      <p id="toast-msg" class="text-xs text-emerald-100">Saved to database successfully.</p>
+      <p id="toast-msg" class="text-xs text-emerald-100">Saved successfully.</p>
     </div>
   </div>
 
@@ -229,11 +229,11 @@
   <!-- ========================================== -->
   <!-- CREATE / EDIT TICKET MODAL                 -->
   <!-- ========================================== -->
-  <div id="ticket-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-40 transition-opacity">
+  <div id="ticket-modal" style="display: none;" class="fixed inset-0 bg-black/70 backdrop-blur-sm items-center justify-center p-4 z-40 transition-opacity">
     <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
       <div class="bg-slate-800/80 border-b border-slate-700 px-6 py-4 flex justify-between items-center">
         <h3 id="modal-title" class="text-lg font-bold text-white">Create New Ticket</h3>
-        <button onclick="closeModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-700/50 transition">
+        <button type="button" onclick="closeModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-700/50 transition">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
@@ -311,14 +311,14 @@
   <!-- ========================================== -->
   <!-- TICKET DETAILS VIEW MODAL                  -->
   <!-- ========================================== -->
-  <div id="view-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-40 transition-opacity">
+  <div id="view-modal" style="display: none;" class="fixed inset-0 bg-black/70 backdrop-blur-sm items-center justify-center p-4 z-40 transition-opacity">
     <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
       <div class="bg-slate-800/80 border-b border-slate-700 px-6 py-4 flex justify-between items-center">
         <div class="flex items-center gap-2">
           <span id="view-category-icon" class="text-sky-400"></span>
           <h3 id="view-device" class="text-lg font-bold text-white">Ticket Details</h3>
         </div>
-        <button onclick="closeViewModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-700/50 transition">
+        <button type="button" onclick="closeViewModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-700/50 transition">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
@@ -352,7 +352,7 @@
       </div>
 
       <div class="bg-slate-900/50 border-t border-slate-700/60 px-6 py-3.5 flex justify-end">
-        <button onclick="closeViewModal()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded-xl text-xs font-medium transition">Close</button>
+        <button type="button" onclick="closeViewModal()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded-xl text-xs font-medium transition">Close</button>
       </div>
     </div>
   </div>
@@ -384,7 +384,7 @@
     let allTickets = [];
     let toastTimeout = null;
 
-    // TOAST NOTIFICATION TRIGGER
+    // POPUP SUCCESS TAB CONTROLLER
     window.showToast = (title, message) => {
       const toast = document.getElementById("toast-notification");
       document.getElementById("toast-title").textContent = title;
@@ -555,7 +555,7 @@
       });
     };
 
-    // CREATE / EDIT MODAL CONTROLS
+    // OPEN/CLOSE MODAL FUNCTIONS (GUARANTEED HIDE)
     window.openModal = (mode, id = null) => {
       const modal = document.getElementById("ticket-modal");
       const title = document.getElementById("modal-title");
@@ -582,14 +582,12 @@
         title.textContent = "Create New Ticket";
       }
 
-      modal.classList.remove("hidden");
-      modal.classList.add("flex");
+      modal.style.display = "flex";
     };
 
     window.closeModal = () => {
       const modal = document.getElementById("ticket-modal");
-      modal.classList.remove("flex");
-      modal.classList.add("hidden");
+      modal.style.display = "none";
       document.getElementById("ticket-form").reset();
     };
 
@@ -609,22 +607,18 @@
       const createdDate = t.created ? new Date(t.created.seconds * 1000).toLocaleString() : "Just now";
       document.getElementById("view-created").textContent = createdDate;
 
-      const viewModal = document.getElementById("view-modal");
-      viewModal.classList.remove("hidden");
-      viewModal.classList.add("flex");
+      document.getElementById("view-modal").style.display = "flex";
     };
 
     window.closeViewModal = () => {
-      const viewModal = document.getElementById("view-modal");
-      viewModal.classList.remove("flex");
-      viewModal.classList.add("hidden");
+      document.getElementById("view-modal").style.display = "none";
     };
 
-    // FORM SUBMIT (CREATE OR UPDATE)
+    // FORM SUBMIT ACTION - DIRECT MODAL CLOSE AND TOAST
     document.getElementById("ticket-form").addEventListener("submit", async (e) => {
       e.preventDefault();
+      
       const id = document.getElementById("ticket-id").value;
-
       const payload = {
         device: document.getElementById("device-name").value,
         client: document.getElementById("client-name").value,
@@ -637,33 +631,31 @@
         updated: new Date()
       };
 
-      try {
-        if (id) {
-          await updateDoc(doc(db, "tickets", id), payload);
-          showToast("Ticket Updated", `Successfully updated ticket for ${payload.device}`);
-        } else {
-          payload.created = new Date();
-          await addDoc(collection(db, "tickets"), payload);
-          showToast("Ticket Created", `New ticket added for ${payload.device}`);
-        }
-      } catch (err) {
-        showToast("Error", err.message);
-      } finally {
-        closeModal();
+      // IMMEDIATELY CLOSE THE FORM MODAL
+      closeModal();
+
+      // SHOW SLIDING POPUP TAB WITH TICK MARK
+      if (id) {
+        showToast("✓ Ticket Updated", `Saved updates for ${payload.device}`);
+        await updateDoc(doc(db, "tickets", id), payload);
+      } else {
+        showToast("✓ Ticket Created", `New ticket created for ${payload.device}`);
+        payload.created = new Date();
+        await addDoc(collection(db, "tickets"), payload);
       }
     });
 
     // UPDATE STATUS DIRECTLY
     window.updateStatus = (id, newStatus) => {
       updateDoc(doc(db, "tickets", id), { status: newStatus, updated: new Date() });
-      showToast("Status Updated", `Ticket status changed to ${newStatus}`);
+      showToast("✓ Status Updated", `Status changed to ${newStatus}`);
     };
 
     // DELETE TICKET
     window.deleteTicket = (id) => {
       if (confirm("Are you sure you want to delete this repair ticket?")) {
         deleteDoc(doc(db, "tickets", id));
-        showToast("Ticket Deleted", "The ticket was removed permanently.");
+        showToast("✓ Ticket Deleted", "Ticket removed permanently.");
       }
     };
 
