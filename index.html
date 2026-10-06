@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechFix - IT Repair Ticket System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0284c7',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        /* Print formatting rules */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-modal, #printable-modal * {
+                visibility: visible;
+            }
+            #printable-modal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: auto;
+                background: white !important;
+                color: black !important;
+                box-shadow: none !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col antialiased">
+
+    <!-- Navigation Header -->
+    <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/20">
+                    <i class="fa-solid font-bold fa-wrench text-lg"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">TechFix Pro</span>
+                    <span class="text-xs block text-slate-400 font-medium">Repair Ticket Portal</span>
+                </div>
+            </div>
+
+            <!-- Header Quick Controls -->
+            <div class="flex items-center space-x-3">
+                <button onclick="openModal('new')" class="bg-sky-600 hover:bg-sky-500 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition shadow-lg shadow-sky-600/30">
+                    <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">New Ticket</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+        <!-- Top Metrics Bar -->
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Tickets</p>
+                    <h3 id="stat-total" class="text-2xl font-bold text-white mt-1">0</h3>
+                </div>
+                <div class="p-3 bg-slate-700/50 rounded-lg text-slate-300">
+                    <i class="fa-solid fa-ticket text-xl"></i>
+                </div>
+            </div>
+
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-amber-400 uppercase tracking-wider">Active Jobs</p>
+                    <h3 id="stat-active" class="text-2xl font-bold text-amber-300 mt-1">0</h3>
+                </div>
+                <div class="p-3 bg-amber-500/10 rounded-lg text-amber-400">
+                    <i class="fa-solid fa-arrows-spin text-xl"></i>
+                </div>
+            </div>
+
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-emerald-400 uppercase tracking-wider">Completed</p>
+                    <h3 id="stat-completed" class="text-2xl font-bold text-emerald-300 mt-1">0</h3>
+                </div>
+                <div class="p-3 bg-emerald-500/10 rounded-lg text-emerald-400">
+                    <i class="fa-solid fa-circle-check text-xl"></i>
+                </div>
+            </div>
+
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-sky-400 uppercase tracking-wider">Est. Revenue</p>
+                    <h3 id="stat-revenue" class="text-2xl font-bold text-sky-300 mt-1">£0.00</h3>
+                </div>
+                <div class="p-3 bg-sky-500/10 rounded-lg text-sky-400">
+                    <i class="fa-solid fa-sterling-sign text-xl"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- Search & Filter Controls -->
+        <section class="bg-slate-800/80 border border-slate-700 rounded-xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between shadow-sm">
+            <div class="relative w-full md:w-80">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="search-input" oninput="renderTickets()" placeholder="Search customer, device, phone..." class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent">
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+                <!-- Status Filter -->
+                <select id="filter-status" onchange="renderTickets()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                    <option value="ALL">All Statuses</option>
+                    <option value="New">New</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Waiting for Parts">Waiting for Parts</option>
+                    <option value="Completed">Completed</option>
+                </select>
+
+                <!-- Priority Filter -->
+                <select id="filter-priority" onchange="renderTickets()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                    <option value="ALL">All Priorities</option>
+                    <option value="Low">Low Priority</option>
+                    <option value="Medium">Medium Priority</option>
+                    <option value="High">High Priority</option>
+                </select>
+
+                <!-- Reset Data Button -->
+                <button onclick="loadSampleData()" class="px-3 py-2 text-xs font-medium bg-slate-700/60 hover:bg-slate-700 text-slate-300 rounded-lg transition border border-slate-600/50 flex items-center gap-1.5" title="Load Demo Tickets">
+                    <i class="fa-solid fa-database"></i> <span>Sample Data</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Ticket Container -->
+        <section class="bg-slate-800/80 border border-slate-700 rounded-xl overflow-hidden shadow-xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-900/60 text-slate-400 font-semibold border-b border-slate-700 text-xs uppercase tracking-wider">
+                        <tr>
+                            <th class="px-5 py-4">Ticket ID</th>
+                            <th class="px-5 py-4">Customer</th>
+                            <th class="px-5 py-4">Device & Problem</th>
+                            <th class="px-5 py-4">Status</th>
+                            <th class="px-5 py-4">Priority</th>
+                            <th class="px-5 py-4">Cost</th>
+                            <th class="px-5 py-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ticket-table-body" class="divide-y divide-slate-700/50">
+                        <!-- Dynamic ticket rows rendered here via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State Display -->
+            <div id="empty-state" class="hidden p-12 text-center">
+                <div class="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mx-auto text-slate-400 mb-4">
+                    <i class="fa-solid fa-folder-open text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-200">No repair tickets found</h3>
+                <p class="text-sm text-slate-400 mt-1 max-w-sm mx-auto">There are no tickets matching your search or filters. Create a new repair ticket to get started.</p>
+                <button onclick="openModal('new')" class="mt-4 bg-sky-600 hover:bg-sky-500 text-white px-4 py-2 rounded-lg font-medium text-sm inline-flex items-center gap-2 transition">
+                    <i class="fa-solid fa-plus"></i> Create Ticket
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Create / Edit Ticket Modal -->
+    <div id="ticket-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-slate-700 flex items-center justify-between bg-slate-900/50">
+                <h2 id="modal-title" class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-sky-400"></i> New Repair Ticket
+                </h2>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white p-1 rounded-lg transition">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Form Body -->
+            <form id="ticket-form" onsubmit="handleFormSubmit(event)" class="overflow-y-auto p-6 space-y-5 flex-1">
+                <input type="hidden" id="ticket-id">
+
+                <!-- Customer Details Grid -->
+                <div>
+                    <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider mb-3">Customer Information</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">First Name *</label>
+                            <input type="text" id="cust-first-name" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Last Name *</label>
+                            <input type="text" id="cust-last-name" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Email Address *</label>
+                            <input type="email" id="cust-email" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Phone Number *</label>
+                            <input type="tel" id="cust-phone" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Physical Address</label>
+                            <input type="text" id="cust-address" placeholder="e.g. 123 High Street, City" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="border-slate-700/60">
+
+                <!-- Repair Job Info Grid -->
+                <div>
+                    <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider mb-3">Repair Information</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Device Model / Name *</label>
+                            <input type="text" id="device-info" placeholder="e.g. MacBook Pro 16&quot;, iPhone 13, Dell XPS" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Issue Description *</label>
+                            <textarea id="issue-desc" rows="3" required placeholder="Describe screen damage, boot loop, liquid spill, speed issues, etc." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-sky-500 focus:outline-none"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Estimated Cost (£ / $) *</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">£</span>
+                                <input type="number" step="0.01" min="0" id="estimated-cost" required class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-7 pr-3 py-2 text-sm text-white focus:ring-2 focus:ring-sky-500 focus:outline-none" placeholder="0.00">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Priority Level</label>
+                            <select id="ticket-priority" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                                <option value="Low">Low</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="High">High / Urgent</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Status</label>
+                            <select id="ticket-status" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                                <option value="New">New</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Waiting for Parts">Waiting for Parts</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Buttons -->
+                <div class="pt-4 flex justify-end gap-3 border-t border-slate-700/60">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-700 transition">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg text-sm font-medium bg-sky-600 hover:bg-sky-500 text-white transition shadow-lg shadow-sky-600/30">Save Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Printable Receipt / Customer Summary Modal -->
+    <div id="receipt-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-700 flex items-center justify-between no-print bg-slate-900/50">
+                <h3 class="font-bold text-white">Customer Receipt Preview</h3>
+                <button onclick="closeReceiptModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Receipt Content Area -->
+            <div id="printable-modal" class="p-8 bg-white text-slate-900 overflow-y-auto">
+                <div class="text-center border-b pb-4 mb-4">
+                    <h1 class="text-2xl font-black uppercase tracking-wide text-slate-900">TechFix Repair Services</h1>
+                    <p class="text-xs text-slate-500 mt-1">Official Job Receipt & Service Intake Form</p>
+                    <p class="text-xs text-slate-500">Phone: (555) 019-2831 | Email: support@techfix.com</p>
+                </div>
+
+                <div class="flex justify-between text-xs mb-4">
+                    <div>
+                        <p class="font-semibold text-slate-700">TICKET NO: <span id="rec-id" class="text-slate-900 font-bold">#TK-1001</span></p>
+                        <p class="text-slate-500" id="rec-date">Date: 2026-10-06</p>
+                    </div>
+                    <div class="text-right">
+                        <span id="rec-status" class="px-2 py-1 rounded text-xs font-bold bg-slate-100 text-slate-800 border">NEW</span>
+                    </div>
+                </div>
+
+                <div class="border rounded-lg p-3 bg-slate-50 mb-4 text-xs space-y-1">
+                    <p class="font-bold text-slate-800 text-xs uppercase">Customer Details</p>
+                    <p class="font-semibold" id="rec-name">John Doe</p>
+                    <p id="rec-phone">Phone: -</p>
+                    <p id="rec-email">Email: -</p>
+                    <p id="rec-address">Address: -</p>
+                </div>
+
+                <div class="border rounded-lg p-3 bg-slate-50 mb-4 text-xs space-y-1">
+                    <p class="font-bold text-slate-800 text-xs uppercase">Repair Specifications</p>
+                    <p><span class="font-semibold">Device:</span> <span id="rec-device">-</span></p>
+                    <p><span class="font-semibold">Reported Issue:</span></p>
+                    <p id="rec-issue" class="text-slate-700 italic pl-2 border-l-2 border-slate-300 mt-1">-</p>
+                </div>
+
+                <div class="border-t border-b py-3 mb-6 flex justify-between items-center font-bold">
+                    <span>Estimated Repair Cost:</span>
+                    <span id="rec-cost" class="text-lg">£0.00</span>
+                </div>
+
+                <div class="text-[10px] text-slate-500 space-y-1">
+                    <p><strong>Terms:</strong> Estimated price may vary based on component availability and full diagnostic checks. Customer will be notified prior to any additional work.</p>
+                </div>
+            </div>
+
+            <!-- Receipt Modal Actions -->
+            <div class="px-6 py-4 border-t border-slate-700 flex justify-end gap-3 no-print bg-slate-900/50">
+                <button onclick="closeReceiptModal()" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-700 transition">Close</button>
+                <button onclick="window.print()" class="px-5 py-2 rounded-lg text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-2">
+                    <i class="fa-solid fa-print"></i> Print Receipt
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // App State Management
+        let tickets = [];
+        const STORAGE_KEY = 'techfix_repair_tickets_v1';
+
+        // Initialize App on Page Load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadTicketsFromStorage();
+            if (tickets.length === 0) {
+                loadSampleData();
+            } else {
+                renderTickets();
+            }
+        });
+
+        // Load Tickets from LocalStorage
+        function loadTicketsFromStorage() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                tickets = stored ? JSON.parse(stored) : [];
+            } catch (e) {
+                console.error('Failed to load tickets from localStorage', e);
+                tickets = [];
+            }
+        }
+
+        // Save Tickets to LocalStorage
+        function saveTicketsToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
+            } catch (e) {
+                console.error('Failed to save to localStorage', e);
+            }
+        }
+
+        // Pre-fill Sample Data for Demo
+        function loadSampleData() {
+            tickets = [
+                {
+                    id: 'TK-1001',
+                    firstName: 'Sarah',
+                    lastName: 'Jenkins',
+                    email: 'sarah.j@example.com',
+                    phone: '07700 900077',
+                    address: '42 Baker Street, London',
+                    device: 'MacBook Pro 14" (2021)',
+                    issue: 'Liquid spilled on keyboard. Trackpad clicking unresponsive and key caps sticking.',
+                    cost: 185.00,
+                    priority: 'High',
+                    status: 'In Progress',
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: 'TK-1002',
+                    firstName: 'David',
+                    lastName: 'Miller',
+                    email: 'd.miller@example.com',
+                    phone: '07700 900123',
+                    address: '15 High Street, Manchester',
+                    device: 'Custom Gaming PC',
+                    issue: 'PC keeps crashing during high GPU load with Blue Screen of Death (BSOD).',
+                    cost: 65.00,
+                    priority: 'Medium',
+                    status: 'New',
+                    createdAt: new Date(Date.now() - 86400000).toISOString()
+                },
+                {
+                    id: 'TK-1003',
+                    firstName: 'Emma',
+                    lastName: 'Watson',
+                    email: 'e.watson@example.com',
+                    phone: '07700 900888',
+                    address: '89 Church Road, Birmingham',
+                    device: 'Samsung Galaxy S22',
+                    issue: 'Screen cracked after accidental drop. Replacement AMOLED display needed.',
+                    cost: 140.00,
+                    priority: 'Low',
+                    status: 'Waiting for Parts',
+                    createdAt: new Date(Date.now() - 172800000).toISOString()
+                }
+            ];
+            saveTicketsToStorage();
+            renderTickets();
+        }
+
+        // Render Ticket Table & Stats Metrics
+        function renderTickets() {
+            const tbody = document.getElementById('ticket-table-body');
+            const emptyState = document.getElementById('empty-state');
+            const searchVal = document.getElementById('search-input').value.toLowerCase().trim();
+            const filterStatus = document.getElementById('filter-status').value;
+            const filterPriority = document.getElementById('filter-priority').value;
+
+            // Filter logic
+            const filteredTickets = tickets.filter(ticket => {
+                const fullName = `${ticket.firstName} ${ticket.lastName}`.toLowerCase();
+                const matchesSearch = fullName.includes(searchVal) ||
+                                      ticket.device.toLowerCase().includes(searchVal) ||
+                                      ticket.id.toLowerCase().includes(searchVal) ||
+                                      ticket.phone.toLowerCase().includes(searchVal);
+                
+                const matchesStatus = filterStatus === 'ALL' || ticket.status === filterStatus;
+                const matchesPriority = filterPriority === 'ALL' || ticket.priority === filterPriority;
+
+                return matchesSearch && matchesStatus && matchesPriority;
+            });
+
+            // Update Metrics Stats
+            updateMetrics();
+
+            // Handle Empty State
+            if (filteredTickets.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            // Build HTML Rows
+            tbody.innerHTML = filteredTickets.map(ticket => `
+                <tr class="hover:bg-slate-700/30 transition border-b border-slate-700/50">
+                    <td class="px-5 py-4 font-mono font-medium text-sky-400">
+                        ${ticket.id}
+                    </td>
+                    <td class="px-5 py-4">
+                        <div class="font-semibold text-slate-100">${escapeHtml(ticket.firstName)} ${escapeHtml(ticket.lastName)}</div>
+                        <div class="text-xs text-slate-400">${escapeHtml(ticket.phone)}</div>
+                    </td>
+                    <td class="px-5 py-4 max-w-xs">
+                        <div class="font-medium text-slate-200 truncate">${escapeHtml(ticket.device)}</div>
+                        <div class="text-xs text-slate-400 truncate">${escapeHtml(ticket.issue)}</div>
+                    </td>
+                    <td class="px-5 py-4">
+                        ${getStatusBadge(ticket.status)}
+                    </td>
+                    <td class="px-5 py-4">
+                        ${getPriorityBadge(ticket.priority)}
+                    </td>
+                    <td class="px-5 py-4 font-bold text-slate-100">
+                        £${parseFloat(ticket.cost).toFixed(2)}
+                    </td>
+                    <td class="px-5 py-4 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            <button onclick="openReceipt('${ticket.id}')" title="Print Receipt" class="p-1.5 text-slate-400 hover:text-sky-400 hover:bg-slate-700/60 rounded transition">
+                                <i class="fa-solid fa-print"></i>
+                            </button>
+                            <button onclick="openModal('edit', '${ticket.id}')" title="Edit Ticket" class="p-1.5 text-slate-400 hover:text-amber-400 hover:bg-slate-700/60 rounded transition">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button onclick="deleteTicket('${ticket.id}')" title="Delete Ticket" class="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-700/60 rounded transition">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Helper Badge Styles
+        function getStatusBadge(status) {
+            switch(status) {
+                case 'New':
+                    return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">New</span>`;
+                case 'In Progress':
+                    return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">In Progress</span>`;
+                case 'Waiting for Parts':
+                    return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">Waiting Parts</span>`;
+                case 'Completed':
+                    return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Completed</span>`;
+                default:
+                    return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-700 text-slate-300">${status}</span>`;
+            }
+        }
+
+        function getPriorityBadge(priority) {
+            switch(priority) {
+                case 'High':
+                    return `<span class="text-xs text-red-400 font-semibold flex items-center gap-1"><i class="fa-solid fa-circle text-[8px]"></i> High</span>`;
+                case 'Medium':
+                    return `<span class="text-xs text-amber-400 font-semibold flex items-center gap-1"><i class="fa-solid fa-circle text-[8px]"></i> Medium</span>`;
+                case 'Low':
+                    return `<span class="text-xs text-slate-400 font-semibold flex items-center gap-1"><i class="fa-solid fa-circle text-[8px]"></i> Low</span>`;
+                default:
+                    return priority;
+            }
+        }
+
+        // Update Dashboard Summary Stats
+        function updateMetrics() {
+            const total = tickets.length;
+            const active = tickets.filter(t => t.status !== 'Completed').length;
+            const completed = tickets.filter(t => t.status === 'Completed').length;
+            const revenue = tickets.reduce((acc, curr) => acc + (parseFloat(curr.cost) || 0), 0);
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-active').innerText = active;
+            document.getElementById('stat-completed').innerText = completed;
+            document.getElementById('stat-revenue').innerText = '£' + revenue.toFixed(2);
+        }
+
+        // Open Form Modal (Create or Edit)
+        function openModal(mode, ticketId = null) {
+            const modal = document.getElementById('ticket-modal');
+            const form = document.getElementById('ticket-form');
+            const title = document.getElementById('modal-title');
+
+            form.reset();
+
+            if (mode === 'edit' && ticketId) {
+                const t = tickets.find(x => x.id === ticketId);
+                if (!t) return;
+
+                title.innerHTML = `<i class="fa-solid fa-pen-to-square text-amber-400"></i> Edit Ticket #${t.id}`;
+                document.getElementById('ticket-id').value = t.id;
+                document.getElementById('cust-first-name').value = t.firstName;
+                document.getElementById('cust-last-name').value = t.lastName;
+                document.getElementById('cust-email').value = t.email;
+                document.getElementById('cust-phone').value = t.phone;
+                document.getElementById('cust-address').value = t.address || '';
+                document.getElementById('device-info').value = t.device;
+                document.getElementById('issue-desc').value = t.issue;
+                document.getElementById('estimated-cost').value = t.cost;
+                document.getElementById('ticket-priority').value = t.priority;
+                document.getElementById('ticket-status').value = t.status;
+            } else {
+                title.innerHTML = `<i class="fa-solid fa-plus text-sky-400"></i> New Repair Ticket`;
+                document.getElementById('ticket-id').value = '';
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('ticket-modal').classList.add('hidden');
+        }
+
+        // Form Submission Handler
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const existingId = document.getElementById('ticket-id').value;
+            const ticketData = {
+                id: existingId || generateTicketId(),
+                firstName: document.getElementById('cust-first-name').value.trim(),
+                lastName: document.getElementById('cust-last-name').value.trim(),
+                email: document.getElementById('cust-email').value.trim(),
+                phone: document.getElementById('cust-phone').value.trim(),
+                address: document.getElementById('cust-address').value.trim(),
+                device: document.getElementById('device-info').value.trim(),
+                issue: document.getElementById('issue-desc').value.trim(),
+                cost: parseFloat(document.getElementById('estimated-cost').value) || 0,
+                priority: document.getElementById('ticket-priority').value,
+                status: document.getElementById('ticket-status').value,
+                createdAt: existingId ? (tickets.find(t => t.id === existingId)?.createdAt || new Date().toISOString()) : new Date().toISOString()
+            };
+
+            if (existingId) {
+                const index = tickets.findIndex(t => t.id === existingId);
+                if (index !== -1) tickets[index] = ticketData;
+            } else {
+                tickets.unshift(ticketData);
+            }
+
+            saveTicketsToStorage();
+            renderTickets();
+            closeModal();
+        }
+
+        // Delete Ticket Handler
+        function deleteTicket(ticketId) {
+            if (confirm(`Are you sure you want to delete ticket ${ticketId}?`)) {
+                tickets = tickets.filter(t => t.id !== ticketId);
+                saveTicketsToStorage();
+                renderTickets();
+            }
+        }
+
+        // Printable Receipt Modal Controller
+        function openReceipt(ticketId) {
+            const ticket = tickets.find(t => t.id === ticketId);
+            if (!ticket) return;
+
+            document.getElementById('rec-id').innerText = ticket.id;
+            document.getElementById('rec-date').innerText = 'Date: ' + new Date(ticket.createdAt).toLocaleDateString();
+            document.getElementById('rec-status').innerText = ticket.status.toUpperCase();
+            document.getElementById('rec-name').innerText = `${ticket.firstName} ${ticket.lastName}`;
+            document.getElementById('rec-phone').innerText = 'Phone: ' + ticket.phone;
+            document.getElementById('rec-email').innerText = 'Email: ' + ticket.email;
+            document.getElementById('rec-address').innerText = 'Address: ' + (ticket.address || 'N/A');
+            document.getElementById('rec-device').innerText = ticket.device;
+            document.getElementById('rec-issue').innerText = ticket.issue;
+            document.getElementById('rec-cost').innerText = '£' + parseFloat(ticket.cost).toFixed(2);
+
+            document.getElementById('receipt-modal').classList.remove('hidden');
+        }
+
+        function closeReceiptModal() {
+            document.getElementById('receipt-modal').classList.add('hidden');
+        }
+
+        // Utility: Unique ID Generator
+        function generateTicketId() {
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            return `TK-${randomNum}`;
+        }
+
+        // Utility: String sanitizer
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                }[m];
+            });
+        }
+    </script>
+</body>
+</html>
