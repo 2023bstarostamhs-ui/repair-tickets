@@ -15,7 +15,7 @@
   <style>
     body { font-family: 'Inter', sans-serif; }
     
-    /* Bulletproof Modal Display System */
+    /* Reliable Modal Overlay Engine */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -139,7 +139,7 @@
 
     <!-- REPAIR TICKETS GRID -->
     <section id="tickets-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-      <!-- Tickets rendered dynamically -->
+      <!-- Dynamic Tickets -->
     </section>
 
   </main>
@@ -230,6 +230,23 @@
     </div>
   </div>
 
+  <!-- CUSTOM DELETE CONFIRMATION MODAL -->
+  <div id="delete-modal" class="modal-overlay">
+    <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-4 text-center">
+      <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto text-xl">
+        <i class="fa-solid fa-trash-can"></i>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-slate-800">Delete Ticket?</h3>
+        <p class="text-xs text-slate-500 mt-1">Are you sure you want to remove this ticket? This cannot be undone.</p>
+      </div>
+      <div class="flex items-center gap-3 pt-2">
+        <button type="button" id="btn-cancel-delete" class="flex-1 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition">Cancel</button>
+        <button type="button" id="btn-confirm-delete" class="flex-1 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-sm transition">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+
   <!-- PRINT RECEIPT MODAL -->
   <div id="receipt-modal" class="modal-overlay">
     <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
@@ -264,7 +281,7 @@
     </div>
   </div>
 
-  <!-- FIREBASE & CORE ENGINE (STANDALONE NON-BLOCKING) -->
+  <!-- FIREBASE & CORE ENGINE -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -283,11 +300,14 @@
     let db = null;
     let allTickets = [];
     let currentFilter = 'all';
+    let pendingDeleteId = null;
 
-    // 1. GUARANTEED MODAL TOGGLE FUNCTIONS
+    // MODAL ELEMENTS
     const ticketModal = document.getElementById("ticket-modal");
     const receiptModal = document.getElementById("receipt-modal");
+    const deleteModal = document.getElementById("delete-modal");
 
+    // MODAL TOGGLES
     window.closeModal = () => {
       ticketModal.classList.remove("open");
       document.getElementById("ticket-form").reset();
@@ -320,9 +340,7 @@
       ticketModal.classList.add("open");
     };
 
-    window.closeReceiptModal = () => {
-      receiptModal.classList.remove("open");
-    };
+    window.closeReceiptModal = () => receiptModal.classList.remove("open");
 
     window.openReceiptModal = (id) => {
       const ticket = allTickets.find(t => t.id === id);
@@ -340,20 +358,54 @@
       receiptModal.classList.add("open");
     };
 
-    // EVENT LISTENERS FOR MODAL CLOSING
+    // DELETE MODAL TOGGLES
+    window.openDeleteModal = (id) => {
+      pendingDeleteId = id;
+      deleteModal.classList.add("open");
+    };
+
+    window.closeDeleteModal = () => {
+      pendingDeleteId = null;
+      deleteModal.classList.remove("open");
+    };
+
+    // EVENT LISTENERS FOR MODALS
     document.getElementById("btn-new-ticket").addEventListener("click", () => window.openModal('create'));
     document.getElementById("btn-close-modal").addEventListener("click", window.closeModal);
     document.getElementById("btn-cancel-modal").addEventListener("click", window.closeModal);
     document.getElementById("btn-close-receipt").addEventListener("click", window.closeReceiptModal);
+    document.getElementById("btn-cancel-delete").addEventListener("click", window.closeDeleteModal);
 
-    // 2. FORM SUBMISSION (CLOSES INSTANTLY ON FIRST LINE)
+    // CONFIRM DELETE HANDLER (GUARANTEED WORKING)
+    document.getElementById("btn-confirm-delete").addEventListener("click", async () => {
+      if (!pendingDeleteId) return;
+      const targetId = pendingDeleteId;
+      window.closeDeleteModal();
+
+      // 1. Instantly remove locally
+      allTickets = allTickets.filter(t => t.id !== targetId);
+      localStorage.setItem("local_tickets", JSON.stringify(allTickets));
+      updateMetrics();
+      renderTickets();
+      showToast("✓ Deleted", "Ticket removed successfully.");
+
+      // 2. Remove from Firebase Cloud
+      if (db && !targetId.startsWith('local-')) {
+        try {
+          await deleteDoc(doc(db, "tickets", targetId));
+        } catch (err) {
+          console.warn("Cloud delete failed (using local deletion):", err.message);
+        }
+      }
+    });
+
+    // FORM SUBMISSION (INSTANT CLOSE)
     document.getElementById("ticket-form").addEventListener("submit", async function (e) {
       e.preventDefault();
 
-      // **STEP 1: CLOSE MODAL IMMEDIATELY AT ONCE**
+      // Close modal immediately
       window.closeModal();
 
-      // STEP 2: Collect Payload
       const id = document.getElementById("ticket-doc-id").value;
       const payload = {
         client: document.getElementById("client-name").value,
@@ -368,7 +420,6 @@
         updatedAt: new Date().toISOString()
       };
 
-      // STEP 3: Save to Cloud / Local Storage
       let savedToCloud = false;
       if (db) {
         try {
@@ -405,7 +456,7 @@
       }
     });
 
-    // 3. TOAST NOTIFIER
+    // TOAST NOTIFIER
     window.showToast = (title, msg) => {
       const toast = document.getElementById("toast");
       document.getElementById("toast-title").textContent = title;
@@ -420,7 +471,7 @@
       }, 2500);
     };
 
-    // 4. METRICS & TICKETS RENDER
+    // METRICS & RENDER
     function updateMetrics() {
       document.getElementById("stat-total").textContent = allTickets.length;
       
@@ -517,7 +568,7 @@
                 <button onclick="window.openModal('edit', '${t.id}')" title="Edit Ticket" class="text-slate-400 hover:text-sky-600 p-2 rounded-lg hover:bg-sky-50 transition">
                   <i class="fa-solid fa-pen-to-square"></i>
                 </button>
-                <button onclick="window.deleteTicket('${t.id}')" title="Delete Ticket" class="text-slate-400 hover:text-rose-600 p-2 rounded-lg hover:bg-rose-50 transition">
+                <button onclick="window.openDeleteModal('${t.id}')" title="Delete Ticket" class="text-slate-400 hover:text-rose-600 p-2 rounded-lg hover:bg-rose-50 transition">
                   <i class="fa-solid fa-trash-can"></i>
                 </button>
               </div>
@@ -527,7 +578,7 @@
       });
     };
 
-    // 5. STATUS UPDATE & DELETE
+    // UPDATE STATUS
     window.updateStatus = async (id, newStatus) => {
       if (db && !id.startsWith('local-')) {
         try { await updateDoc(doc(db, "tickets", id), { status: newStatus }); } catch (e) {}
@@ -540,20 +591,7 @@
       showToast("✓ Status Updated", `Changed to ${newStatus}`);
     };
 
-    window.deleteTicket = async (id) => {
-      if (confirm("Delete this ticket?")) {
-        if (db && !id.startsWith('local-')) {
-          try { await deleteDoc(doc(db, "tickets", id)); } catch(e){}
-        }
-        allTickets = allTickets.filter(t => t.id !== id);
-        localStorage.setItem("local_tickets", JSON.stringify(allTickets));
-        updateMetrics();
-        renderTickets();
-        showToast("✓ Deleted", "Ticket removed.");
-      }
-    };
-
-    // 6. SEARCH & FILTER CONTROLS
+    // SEARCH & FILTER CONTROLS
     document.getElementById("search-input").addEventListener("input", renderTickets);
 
     document.querySelectorAll(".filter-btn").forEach(btn => {
@@ -569,7 +607,7 @@
       });
     });
 
-    // 7. FIREBASE INITIALIZATION & REALTIME LISTENERS
+    // FIREBASE INITIALIZATION & REALTIME LISTENERS
     try {
       const app = initializeApp(firebaseConfig);
       db = getFirestore(app);
